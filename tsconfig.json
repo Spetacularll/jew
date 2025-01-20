@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "noEmit": true,
+    "strict": false,             // 关闭严格模式
+    "noImplicitAny": false,  // 允许隐式的 any 类型
+    "ignoreDeprecations": "5.0",
+    // "suppressImplicitAnyIndexErrors": true,  // 禁用索引操作符隐式 any 错误
+    "allowImportingTsExtensions": true,
+    "moduleResolution": "node",  // 使 TypeScript 使用 Node 模块解析
+    "esModuleInterop": true,     // 启用与 CommonJS 模块的兼容性
+    "target": "ESNext",          // 设置目标 JavaScript 版本
+    "module": "ESNext",          // 使用 ES 模块
+    "jsx": "preserve",           // 如果你使用 Vue JSX（可以根据实际情况调整）
+    "skipLibCheck": true,        // 跳过库的类型检查，以提高编译速度
+    "types": ["vite/client"],    // 引入 vite/client 类型
+    "resolveJsonModule": true,    // 允许导入 JSON 文件
+    "baseUrl": ".",              // 设置基础路径
+    "paths": {
+      "@/*": ["src/*"]           // 配置路径别名
+    }
+  },
+  "include": [
+    "src/**/*.ts", 
+    "src/**/*.tsx", 
+    "src/**/*.vue"               // 如果你的项目中有 Vue 文件，确保包含它们
+  ],
+  "exclude": [
+    "node_modules"                // 排除 node_modules
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "name": "jewproj",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "run-p type-check \"build-only {@}\" --",
+    "preview": "vite preview",
+    "build-only": "vite build",
+    "type-check": "vue-tsc --build --force"
+  },
+  "dependencies": {
+    "@types/jsbarcode": "^3.11.4",
+    "axios": "^1.7.7",
+    "element-plus": "^2.9.1",
+    "jewproj": "file:",
+    "jsbarcode": "^3.11.6",
+    "print-js": "^1.6.0",
+    "vue": "^3.5.12",
+    "vue-lazyload": "^3.0.0",
+    "vue-router": "^4.4.5"
+  },
+  "devDependencies": {
+    "@tsconfig/node20": "^20.1.4",
+    "@tsconfig/node22": "^22.0.0",
+    "@types/axios": "^0.9.36",
+    "@types/node": "^20.16.11",
+    "@vitejs/plugin-vue": "^5.1.4",
+    "@vitejs/plugin-vue-jsx": "^4.0.1",
+    "@vue/tsconfig": "^0.5.1",
+    "npm-run-all2": "^6.2.3",
+    "rollup-plugin-visualizer": "^5.14.0",
+    "typescript": "^5.7.2",
+    "vite": "^5.4.11",
+    "vue-tsc": "^2.2.0"
+  }
+}
