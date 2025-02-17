@@ -14,6 +14,7 @@ import Printer from '@/components/printer.vue'
 import Aprinter from '@/views/Aprinter.vue'
 import UPrinter from '@/views/UPrinter.vue'
 import BOutbound from '@/views/BOutbound.vue'
+import Sort from '@/views/sort.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.VITE_BASE_URL),
   routes: [
@@ -51,6 +52,10 @@ const router = createRouter({
       path: '/supplier',
       component: Supplier
 
+    },
+    {
+      path: '/sort',
+      component: Sort
     },
     {
       path:'/outrecord',

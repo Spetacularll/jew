@@ -2,8 +2,8 @@ import axios from 'axios';
 
 // 创建一个 Axios 实例
 const instance = axios.create({
-   baseURL: 'http://8.138.89.11:8080/',  // 后端 API 的基础 URL
- // baseURL: 'http://localhost:8080/',  // 后端 API 的基础 URL,开发环境
+ //  baseURL: 'http://8.138.89.11:8080/',  // 后端 API 的基础 URL
+  baseURL: 'http://localhost:8080/',  // 后端 API 的基础 URL,开发环境
  // baseURL: 'https://infinite-integral-bull.ngrok-free.app', // ngrok based url
   timeout: 7000,  // 设置请求超时时间
 });

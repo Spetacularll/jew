@@ -62,7 +62,12 @@ export default defineComponent({
               await axios.post('/api/outbound/bulk', {
                   productbarcodes: barcodeList,
                   destination: destination.value
+              }).then((response) => {
+                if (response.data.code !== 'SUCCESS') {
+            throw new Error(response.data.message || '业务逻辑错误');
+}
               });
+              
               successMessage.value = '批量出库成功';
               error.value = null;
               barcodes.value = '';  // 清空条形码输入
