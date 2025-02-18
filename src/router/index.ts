@@ -54,6 +54,10 @@ const router = createRouter({
 
     },
     {
+      path: '/printing',
+      component: UPrinter
+    },
+    {
       path: '/sort',
       component: Sort
     },
@@ -65,6 +69,10 @@ const router = createRouter({
       path: '/editproduct',
       component: Editing,
       props: (route) => ({ barcode: route.query.barcode }) // 将 barcode 作为 prop 传入
+    },
+    {
+      path: '/search',
+      component: () => import('../views/Search.vue')
     },
     {
       path: '/label',

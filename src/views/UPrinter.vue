@@ -1,115 +1,148 @@
-<template>
-  <div>
-    <h1>Barcode Printer</h1>
-    <div>
-      <label for="textInput">Enter Text:</label>
-      <input
-        type="text"
-        id="textInput"
-        v-model="inputText"
-        placeholder="Enter display text"
-      />
-      <button @click="generateAndPrint">Print Barcode</button>
-    </div>
-    <div v-show="showPrintArea" class="print-area">
-      <p>{{ inputText }}</p>
-      <canvas ref="barcodeCanvas"></canvas>
-    </div>
-  </div>
-</template>
-
 <script setup>
-import { ref, nextTick } from 'vue';
-import JsBarcode from 'jsbarcode';
+import { ref } from "vue";
+import axios from "../router/axios";
 
-// Define refs
-const inputText = ref('');
-const showPrintArea = ref(false);
-const barcodeCanvas = ref(null);  // Use ref for barcodeCanvas
+// 初始化 BarcodeRequest 数据
+const product = ref({
+  style: "",         // 样式
+  owner: "",         // 所有人
+  time: "",          // 时间
+  serialNumber: "",  // 编号
+  circleSize: null,  // 圈口
+  width: null,       // 宽度
+  price: null,       // 价格
+  supplier: null,    // 供应商ID
+  imageFile: null,   // 图片文件
+});
 
-// Function to generate and print the barcode
-const generateAndPrint = () => {
-  if (!inputText.value.trim()) {
-    alert('Please enter some text.');
-    return;
+// 主色和次色选择
+const primaryColor = ref("");
+const secondaryColor = ref("");
+const isFiftyFifty = ref(false);
+
+// 加载状态
+const isLoading = ref(false);
+const isPrinting = ref(false);
+
+// 提交表单
+const submitForm = async () => {
+  try {
+    isLoading.value = true;
+    isPrinting.value = false;
+
+    const formData = new FormData();
+    let styleWithFiftyFifty = isFiftyFifty.value ? "5" : "0";  // 五五分成
+    const currentStyle = `${styleWithFiftyFifty}${product.value.style}${primaryColor.value}${secondaryColor.value}`;
+
+    product.value.style = currentStyle;
+    product.value.owner = "H";  // 默认所有人
+    const { imageFile, ...dto } = product.value;
+    formData.append("dto", JSON.stringify(dto));
+
+    if (imageFile) {
+      formData.append("imageFile", imageFile);
+    }
+
+    // 创建两个请求的 URL
+    const url1 = "https://japp.vip.cpolar.cn/api/barcode/create-product";
+    const url2 = "/api/barcode/create-product";
+
+    // 显示打印机处理提示
+    isPrinting.value = true;
+    alert("打印机正在处理，请耐心等待...");
+
+    const [response1, response2] = await Promise.all([
+      axios.post(url1, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+        timeout: 60000,
+      }),
+      axios.post(url2, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+        timeout: 10000,
+      })
+    ]);
+
+    if (response1.data.code === 200) {
+      console.log("产品提交成功:", response1.data.message);
+      alert("打印成功！");
+    } else {
+      alert(`打印操作失败: ${response1.data.message}`);
+    }
+
+    if (response2.data.code === 200) {
+      alert(response2.data.message);
+    } else {
+      console.log("产品提交失败:", response2.data.message);
+      alert(`图片上传操作失败: ${response2.data.message}`);
+    }
+
+  } catch (error) {
+    console.error("提交失败:", error);
+    if (error.code === 'ECONNABORTED') {
+      alert("打印机响应超时，请检查打印机状态");
+    } else if (error.response) {
+      alert(`请求失败: ${error.response.data.message}`);
+    } else {
+      alert("网络异常，请检查网络连接");
+    }
+  } finally {
+    isLoading.value = false;
+    isPrinting.value = false;
   }
-
-  // Now access the canvas using the barcodeCanvas ref
-  const canvas = barcodeCanvas.value;
-
-  // Generate Barcode
-  JsBarcode(canvas, "12345678", {
-    format: "CODE128",
-    width: 2,
-    height: 40,
-    displayValue: false,
-    margin: 0
-  });
-
-  showPrintArea.value = true;
-
-  // Wait for the barcode to be rendered and then print
-  nextTick(() => {
-    printContent();
-    showPrintArea.value = false;
-  });
 };
 
-// Function to open a new print window and print the content
-const printContent = () => {
-  const printWindow = window.open('', '', 'height=400,width=600');
+// 打印单独功能
+const printOnly = async () => {
+  try {
+    isPrinting.value = true;
+    const formData = new FormData();
+    const currentStyle = `${isFiftyFifty.value ? "5" : "0"}${product.value.style}${primaryColor.value}${secondaryColor.value}`;
+    product.value.style = currentStyle;
+    product.value.owner = "H";  // 默认所有人
+    const { imageFile, ...dto } = product.value;
+    formData.append("dto", JSON.stringify(dto));
 
-  // Add styles and content to the print window
-  printWindow.document.write(`
-    <html>
-      <head>
-        <title>Print Barcode</title>
-        <style>
-          @page {
-            size: 40mm 30mm horizontal !important;
-            margin: 0 !important;
-          }
-          body {
-            margin: 0;
-            padding: 0;
-          }
-          .print-area {
-            width: 100% !important;
-            height: 100% !important;
-            page-break-before: always !important;
-            text-align: center;
-          }
-          .print-area canvas {
-            display: block;
-            margin: 0 auto;
-          }
-        </style>
-      </head>
-      <body>
-        ${document.querySelector('.print-area').outerHTML}
-      </body>
-    </html>
-  `);
-  printWindow.document.close(); // Necessary for IE >= 10
-  printWindow.print(); // Trigger the print dialog
+    if (imageFile) {
+      formData.append("imageFile", imageFile);
+    }
+
+    const printUrl = "/api/barcode/print-only";  // 新增的打印功能URL
+    const response = await axios.post(printUrl, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+      timeout: 10000,
+    });
+
+    if (response.data.code === 200) {
+      alert("打印成功！");
+    } else {
+      alert(`打印失败: ${response.data.message}`);
+    }
+  } catch (error) {
+    console.error("打印失败:", error);
+    alert("打印时发生错误，请稍后再试！");
+  } finally {
+    isPrinting.value = false;
+  }
 };
 </script>
 
-<style scoped>
-body {
-  font-family: Arial, sans-serif;
-}
+<template>
+  <div class="form-container">
+    <h1 class="form-title">商品创建表单</h1>
+    <form class="form" @submit.prevent="submitForm">
+      <!-- 表单内容... -->
+      <div class="form-actions">
+        <button type="submit" class="btn-submit" :disabled="isLoading">
+          {{ isLoading ? "提交中..." : "提交" }}
+        </button>
+        <button type="button" class="btn-print" @click="printOnly" :disabled="isPrinting">
+          {{ isPrinting ? "打印中..." : "只打印" }}
+        </button>
+      </div>
+    </form>
 
-.print-area {
-  text-align: center;
-  margin: 0;
-  padding: 0;
-  width: 40mm;
-  height: 30mm;
-}
-
-.print-area canvas {
-  display: block;
-  margin: 0 auto;
-}
-</style>
+    <!-- 加载提示 -->
+    <div v-if="isLoading" class="loading">正在提交，请稍候...</div>
+    <div v-if="isPrinting" class="loading">打印机正在处理，请耐心等待...</div>
+  </div>
+</template>

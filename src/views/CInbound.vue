@@ -26,6 +26,73 @@ const isFiftyFifty = ref(false);
 const isLoading = ref(false);
 const isPrinting = ref(false);
 
+// 打印单独功能
+const printOnly = async () => {
+  try {
+    isPrinting.value = true;
+    const formData = new FormData();
+    const currentStyle = `${isFiftyFifty.value ? "5" : "0"}${product.value.style}${primaryColor.value}${secondaryColor.value}`;
+    product.value.style = currentStyle;
+    product.value.owner = "H";  // 默认所有人
+    const { imageFile, ...dto } = product.value;
+    formData.append("dto", JSON.stringify(dto));
+
+    if (imageFile) {
+      formData.append("imageFile", imageFile);
+    }
+
+    const printUrl = "https://japp.vip.cpolar.cn/api/barcode/create-product";  // 新增的打印功能URL
+    const response = await axios.post(printUrl, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+      timeout: 10000,
+    });
+
+    if (response.data.code === 200) {
+      alert("打印成功！");
+    } else {
+      alert(`打印失败: ${response.data.message}`);
+    }
+  } catch (error) {
+    console.error("打印失败:", error);
+    alert("打印时发生错误，请稍后再试！");
+  } finally {
+    isPrinting.value = false;
+  }
+};
+//单独提交功能
+const submitOnly = async () => {
+  try {
+    isLoading.value = true;
+    const formData = new FormData();
+    const currentStyle = `${isFiftyFifty.value ? "5" : "0"}${product.value.style}${primaryColor.value}${secondaryColor.value}`;
+    product.value.style = currentStyle;
+    product.value.owner = "H";  // 默认所有人
+    const { imageFile, ...dto } = product.value;
+    formData.append("dto", JSON.stringify(dto));
+
+    if (imageFile) {
+      formData.append("imageFile", imageFile);
+    }
+
+    const submiturl = "/api/barcode/create-product";  // 
+    const response = await axios.post(submiturl, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+      timeout: 10000,
+    });
+
+    if (response.data.code === 200) {
+      alert("提交成功！");
+    } else {
+      alert(`提交失败: ${response.data.message}`);
+    }
+  } catch (error) {
+    console.error("提交失败:", error);
+    alert("发生错误，请稍后再试！");
+  } finally {
+    isPrinting.value = false;
+  }
+};
+
 // 提交表单
 const submitForm = async () => {
   try {
@@ -257,6 +324,12 @@ const submitForm = async () => {
         <button type="submit" class="btn-submit" :disabled="isLoading">
           {{ isLoading ? "提交中..." : "提交" }}
         </button>
+        <button type="button" class="btn-print" @click="printOnly" :disabled="isPrinting">
+          {{ isPrinting ? "打印中..." : "只打印" }}
+        </button>
+        <button type="button" class="btn-print" @click="submitOnly" :disabled="isLoading">
+          {{ isLoading ? "提交中..." : "只提交" }}
+        </button>
       </div>
 
       <!-- 加载提示 -->
@@ -342,6 +415,9 @@ label {
 /* 按钮组 */
 .form-actions {
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .btn-submit {
@@ -363,6 +439,33 @@ label {
 }
 
 .btn-submit:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+
+
+
+
+.btn-print {
+  background-color: #62db0c;
+  color: rgb(255, 255, 255);
+  font-size: 16px;
+  font-weight: bold;
+  padding: 12px 25px;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+}
+
+.btn-print:hover {
+  background-color: var(--btn-hover-color);
+  transform: translateY(-2px);
+}
+
+.btn-print:active {
   transform: translateY(0);
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
 }
