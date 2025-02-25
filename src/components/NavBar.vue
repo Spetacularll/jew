@@ -20,8 +20,8 @@ const links = ref([
   { name: '查看仓库产品', path: '/stock' },
   { name: '出库记录', path: '/outrecord' },
   { name: '供货商', path: '/supplier' },
-  { name: '再入库/卖出',path: '/search'}
-]);
+  { name: '批量入库', path: '/reinbound'},
+  { name: '再入库/卖出',path: '/search'}]);
 </script>
 
 <style scoped>

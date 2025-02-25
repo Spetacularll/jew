@@ -15,6 +15,7 @@ import Aprinter from '@/views/Aprinter.vue'
 import UPrinter from '@/views/UPrinter.vue'
 import BOutbound from '@/views/BOutbound.vue'
 import Sort from '@/views/sort.vue'
+import Reinbound from '@/views/Reinbound.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.VITE_BASE_URL),
   routes: [
@@ -34,10 +35,6 @@ const router = createRouter({
     {
       path: '/printer',
       component : UPrinter
-    },
-    {
-      path: '/newprinter',
-      component: Aprinter
     },
     {
       path: '/Inbound',
@@ -64,6 +61,10 @@ const router = createRouter({
     {
       path:'/outrecord',
       component:OutRecord
+    },
+    {
+      path: '/reinbound',
+      component: Reinbound
     },
     {
       path: '/editproduct',

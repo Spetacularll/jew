@@ -58,12 +58,11 @@ import { useRoute, useRouter } from 'vue-router';
 import axios from '../router/axios';
 
 const route = useRoute();
-const router = useRouter();
 const barcode = ref(route.query.barcode || '');
-const product = ref<any>(null);
 const errorMessage = ref('');
 const successMessage = ref('');
 const imageFile = ref<File | null>(null);
+const product = ref<any>(null);
 
 // 获取产品信息
 const searchProductByBarcode = async () => {

@@ -6,8 +6,9 @@ const instance = axios.create({
     ? 'http://localhost:8080/'
     : 'http://8.138.89.11:8080/', // 生产环境地址
   timeout: 7000,
-
+  
 });
+console.log(instance);
 
 
 // 设置请求拦截器
