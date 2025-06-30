@@ -11,7 +11,7 @@ const product = ref({
   circleSize: null,  // 圈口
   width: null,       // 宽度
   price: null,       // 价格
-  supplier: null,    // 供应商ID
+  supplier: 1,    // 供应商ID
   imageFile: null,   // 图片文件
 });
 
@@ -295,7 +295,7 @@ const submitForm = async () => {
         />
       </div>
 
-      <!-- 供应商 -->
+      <!-- 供应商
       <div class="form-group">
         <label for="supplier">供应商:</label>
         <input
@@ -306,7 +306,7 @@ const submitForm = async () => {
           placeholder="请输入供应商 ID"
           required
         />
-      </div>
+      </div> -->
 
       <!-- 图片文件 -->
       <div class="form-group">

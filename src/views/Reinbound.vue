@@ -1,83 +1,109 @@
 <template>
-    <div class="reinbound-page">
-      <h1>商品重新入库</h1>
-  
-      <!-- 输入条形码 -->
-      <div class="input-section">
-        <textarea
-          v-model="barcodesInput"
-          placeholder="请输入条形码，使用空格或 Tab 分隔"
-          rows="5"
-        ></textarea>
-      </div>
-  
-      <!-- 提交按钮 -->
-      <button @click="handleReinbound" :disabled="isLoading">
-        {{ isLoading ? '处理中...' : '提交' }}
-      </button>
-  
-      <!-- 显示结果 -->
-      <div v-if="responseMessage" class="response-message">
-        <p>{{ responseMessage }}</p>
-      </div>
-  
-      <!-- 显示更新后的商品列表 -->
-      <div v-if="updatedProducts.length > 0" class="product-list">
-        <h2>更新后的商品列表</h2>
-        <ul>
-          <li v-for="product in updatedProducts" :key="product.id">
-            商品ID: {{ product.id }}, 条形码: {{ product.barcode }}, 库存: {{ product.stock }}
-          </li>
-        </ul>
-      </div>
+  <div class="reinbound-page">
+    <h1>商品重新入库</h1>
+    <div class="input-section">
+      <textarea
+        v-model="barcodesInput"
+        placeholder="请输入条形码，使用空格或 Tab 分隔"
+        rows="5"
+      ></textarea>
+      <p class="line-count">已添加准备入库的商品: {{ lineCount }}</p>
     </div>
-  </template>
-  
-  <script setup>
-  import { ref } from 'vue';
-  import axios from '../router/axios';
-  
-  // 定义状态
-  const barcodesInput = ref('');
-  const isLoading = ref(false);
-  const responseMessage = ref('');
-  const updatedProducts = ref([]);
-  
-  // 处理重新入库逻辑
-  const handleReinbound = async () => {
-    // 清空之前的响应信息和商品列表
+    <button @click="handleReinbound" :disabled="isLoading">
+      {{ isLoading ? '处理中...' : '提交' }}
+    </button>
+    <div v-if="responseMessage" class="response-message">
+      <p>{{ responseMessage }}</p>
+    </div>
+    <div v-if="processedCount > 0" class="statistics">
+      <p>本次入库成功商品数量: {{ processedCount }} 条</p>
+    </div>
+    </div>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue';
+import axios from '../router/axios';
+import { ElMessageBox } from 'element-plus';
+
+// 定义状态
+const barcodesInput = ref('');
+const isLoading = ref(false);
+const responseMessage = ref('');
+// 修改点：用 processedCount 代替 updatedProducts 来存储成功数量
+const processedCount = ref(0);
+
+// 计算行数
+const lineCount = computed(() => {
+  const lines = barcodesInput.value.split('\n').filter(line => line.trim() !== '');
+  return lines.length;
+});
+
+// 解析返回字符串中的数字
+const parseCountFromString = (str) => {
+  // 使用正则表达式匹配字符串末尾的数字
+  const match = str.match(/:\s*(\d+)/);
+  if (match && match[1]) {
+    // 如果匹配成功，返回提取到的数字
+    return parseInt(match[1], 10);
+  }
+  // 如果没有匹配到，返回0
+  return 0;
+};
+
+
+// 处理重新入库逻辑
+const handleReinbound = async () => {
+  const currentLineCount = lineCount.value;
+
+  try {
+    await ElMessageBox.confirm(
+      `是否确定提交？当前共有 ${currentLineCount} 个商品准备提交。`,
+      '提示',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    );
+
+    // 重置状态
     responseMessage.value = '';
-    updatedProducts.value = [];
-  
-    // 将输入的条形码按空格或 Tab 分割成数组
+    // 修改点：重置 processedCount
+    processedCount.value = 0;
+    
     let barcodes = barcodesInput.value
-      .split(/\s+/) // 使用正则表达式匹配空格或 Tab
+      .split(/\s+/)
       .map((barcode) => barcode.trim())
       .filter((barcode) => barcode);
-  
+
     if (barcodes.length === 0) {
       responseMessage.value = '请输入至少一个条形码！';
       return;
     }
-  
-    // 替换条形码前缀
+
     barcodes = barcodes.map((barcode) => {
       if (barcode.startsWith('1234')) {
-        return '7693' + barcode.slice(4); // 替换前缀
+        return '7693' + barcode.slice(4);
       }
-      return barcode; // 如果不以 1234 开头，则保持原样
+      return barcode;
     });
-  
+
     try {
       isLoading.value = true;
-  
-      // 调用后端 API
       const response = await axios.post('/api/inbound/reinbounds', barcodes);
-  
-      // 检查响应状态
+      
       if (response.data.success) {
-        updatedProducts.value = response.data.data; // 更新商品列表
+        console.log('API 响应:', response.data);
+        // 修改点：不再使用 updatedProducts
+        // updatedProducts.value = response.data.data;
+
+        // 设置成功的消息
         responseMessage.value = '商品重新入库成功！';
+        
+        // 从返回的字符串中解析出处理成功的数量
+        processedCount.value = parseCountFromString(response.data.data);
+        
       } else {
         responseMessage.value = response.data.message || '操作失败，请重试！';
       }
@@ -85,62 +111,81 @@
       console.error('API 请求失败:', error);
       responseMessage.value = '请求失败，请检查网络或稍后再试！';
     } finally {
+      barcodesInput.value = '';
       isLoading.value = false;
     }
-  };
-  </script>
-  
-  <style scoped>
-  .reinbound-page {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 20px;
-    font-family: Arial, sans-serif;
+  } catch {
+    console.log('用户取消了提交');
   }
-  
-  .input-section {
-    margin-bottom: 20px;
-  }
-  
-  textarea {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    resize: none;
-  }
-  
-  button {
-    padding: 10px 20px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  
-  button:disabled {
-    background-color: #ccc;
-  }
-  
-  .response-message {
-    margin-top: 20px;
-    color: #333;
-  }
-  
-  .product-list {
-    margin-top: 20px;
-  }
-  
-  .product-list ul {
-    list-style-type: none;
-    padding: 0;
-  }
-  
-  .product-list li {
-    background-color: #f9f9f9;
-    margin-bottom: 5px;
-    padding: 10px;
-    border-radius: 4px;
-  }
-  </style>
+};
+</script>
+
+<style scoped>
+.reinbound-page {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.input-section {
+  margin-bottom: 20px;
+  position: relative;
+}
+
+textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  resize: none;
+}
+
+.line-count {
+  margin-top: 5px;
+  font-size: 14px;
+  color: #666;
+  text-align: right;
+}
+
+button {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:disabled {
+  background-color: #ccc;
+}
+
+.statistics {
+  margin-top: 20px;
+  font-size: 18px;
+  color: green;
+  font-weight: bold;
+}
+
+.response-message {
+  margin-top: 20px;
+  color: #333;
+}
+
+.product-list {
+  margin-top: 20px;
+}
+
+.product-list ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.product-list li {
+  background-color: #f9f9f9;
+  margin-bottom: 5px;
+  padding: 10px;
+  border-radius: 4px;
+}
+</style>

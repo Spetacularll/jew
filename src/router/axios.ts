@@ -5,7 +5,7 @@ const instance = axios.create({
   baseURL: import.meta.env.MODE === 'development'
     ? 'http://localhost:8080/'
     : 'http://8.138.89.11:8080/', // 生产环境地址
-  timeout: 7000,
+  timeout: 30000,
   
 });
 console.log(instance);

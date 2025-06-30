@@ -16,6 +16,11 @@ import UPrinter from '@/views/UPrinter.vue'
 import BOutbound from '@/views/BOutbound.vue'
 import Sort from '@/views/sort.vue'
 import Reinbound from '@/views/Reinbound.vue'
+import print from '@/views/print.vue'
+import Batch from '@/views/Batch.vue'
+import ReturnPage from '@/views/ReturnPage.vue'
+import Productdetail from '@/views/productdetail.vue'
+import Sellcount from '@/views/sellcount.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.VITE_BASE_URL),
   routes: [
@@ -33,8 +38,8 @@ const router = createRouter({
       component: () => import('../views/AboutView.vue')
     },
     {
-      path: '/printer',
-      component : UPrinter
+      path: '/returnBatch',
+      component: ReturnPage
     },
     {
       path: '/Inbound',
@@ -44,6 +49,22 @@ const router = createRouter({
     {
       path:'/outbound',
       component: BOutbound
+    },{
+      path:'/outbatch',
+      component:Batch
+    },
+    {
+      path: '/printer',
+      component: print
+    },
+    {
+      path: '/product-details/:barcode',
+      component: Productdetail,
+      props: (route) => ({ barcode: route.query.barcode }) // 将 barcode 作为 prop 传入
+    },
+    {
+      path: '/sellcount',
+      component: Sellcount
     },
     {
       path: '/supplier',
@@ -72,7 +93,11 @@ const router = createRouter({
       props: (route) => ({ barcode: route.query.barcode }) // 将 barcode 作为 prop 传入
     },
     {
-      path: '/search',
+      path: '/search/:barcode',
+      component: () => import('../views/Search.vue'),props:true
+    },
+    {
+      path:'/searchp',
       component: () => import('../views/Search.vue')
     },
     {

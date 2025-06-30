@@ -1,207 +1,168 @@
 <template>
-  <div class="edit-product">
-    <h1>编辑产品</h1>
+  <div class="container">
+    <h1>更新产品信息</h1>
 
-    <!-- 搜索栏 -->
-    <div class="search-bar">
-      <label for="barcode">条码:</label>
-      <input v-model="barcode" placeholder="输入产品条码" />
-      <button @click="searchProductByBarcode">搜索产品</button>
+    <!-- 搜索产品 -->
+    <div class="search-section">
+      <label for="barcode">条码：</label>
+      <input v-model="barcode" id="barcode" placeholder="输入条码" />
+      <button @click="searchProduct">搜索</button>
     </div>
 
-    <!-- 错误信息 -->
-    <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
-    <p v-if="successMessage" class="success">{{ successMessage }}</p>
-
-    <!-- 编辑产品表单 -->
+    <!-- 产品信息表单 -->
     <div v-if="product" class="product-form">
-  <form @submit.prevent="updateProduct">
-    <!-- 图片部分 -->
-    <div class="form-group image-center">
-      <img v-if="product.imageUrl" :src="product.imageUrl" alt="Product Image" class="product-image" />
-      <input id="image" type="file" @change="onImageChange" />
+      <h2>编辑产品</h2>
+      <label>分类：</label>
+      <input v-model="product.category" />
+      <label>价格：</label>
+      <input v-model.number="product.price" type="number" />
+      <label>描述：</label>
+      <textarea v-model="product.description"></textarea>
+      <label>上传图片：</label>
+      <input type="file" @change="handleFileUpload" />
+      <img v-if="product.imageUrl" :src="getImageUrl(product.imageUrl)" alt="产品图片" class="product-image" />
+
+      <button @click="updateProduct">更新产品</button>
     </div>
 
-    <!-- 其他表单字段 -->
-    <div class="form-group">
-      <label for="productName">产品名称:</label>
-      <input id="productName" v-model="product.productName" required />
-    </div>
-
-    <div class="form-group">
-      <label for="category">类别:</label>
-      <input id="category" v-model="product.category" />
-    </div>
-
-    <div class="form-group">
-      <label for="price">价格:</label>
-      <input id="price" type="number" v-model="product.price" required />
-    </div>
-
-    <div class="form-group">
-      <label for="description">描述:</label>
-      <textarea id="description" v-model="product.description"></textarea>
-    </div>
-
-    <button type="submit">更新产品</button>
-  </form>
-</div>
-
-    <!-- 返回主页链接 -->
-    <router-link to="/">返回主页</router-link>
+    <div v-if="errorMessage" class="error">{{ errorMessage }}</div>
   </div>
 </template>
 
-<script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import axios from '../router/axios';
+<script setup>
+
+import { ref } from 'vue';
+import { getProductByBarcode, updateProductByBarcode } from '../router/api';
+import { onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 
 const route = useRoute();
-const barcode = ref(route.query.barcode || '');
-const errorMessage = ref('');
-const successMessage = ref('');
-const imageFile = ref<File | null>(null);
-const product = ref<any>(null);
 
-// 获取产品信息
-const searchProductByBarcode = async () => {
+const barcode = ref('');
+const product = ref(null);
+const errorMessage = ref('');
+const selectedFile = ref(null);
+const serverBaseUrl = 'http://localhost:8080/'; // 这里替换成你的后端 URL
+
+
+
+onMounted(() => {
+  // 从路由 query 中获取 barcode
+  if (route.query.barcode) {
+    barcode.value = route.query.barcode;
+    searchProduct(); // 自动搜索产品
+  }
+});
+
+
+const searchProduct = async () => {
+  errorMessage.value = ''; // 清空旧错误
   if (!barcode.value) {
     errorMessage.value = '条码不能为空';
     return;
   }
 
   try {
-    const response = await axios.get(`/api/products/barcode?barcode=${barcode.value}`);
-    product.value = response.data.data;
-    errorMessage.value = '';
-    successMessage.value = '产品找到';
+    const response = await getProductByBarcode(barcode.value);
+    if (response.code === 200) {
+      product.value = response.data;
+    } else {
+      errorMessage.value = response.message || '未找到产品';
+    }
   } catch (error) {
-    errorMessage.value = '未找到该条形码对应的产品';
-    successMessage.value = '';
+    errorMessage.value = '搜索产品失败，请稍后再试';
   }
 };
 
-// 更新产品信息
+const handleFileUpload = (event) => {
+  selectedFile.value = event.target.files[0];
+};
+
 const updateProduct = async () => {
-  if (!product.value) return;
+  if (!product.value) {
+    errorMessage.value = '请先搜索产品';
+    return;
+  }
+
+  // 处理条形码：如果以 "1234" 开头，则替换为 "7693"
+  let processedBarcode = barcode.value.replace(/^1234/, '7693');
 
   const formData = new FormData();
-  formData.append('barcode', product.value.barcode);
-  formData.append('productName', product.value.productName);
-  formData.append('category', product.value.category || '');
-  formData.append('price', product.value.price.toString());
-  formData.append('description', product.value.description || '');
-  
-  if (imageFile.value) {
-    formData.append('imageFile', imageFile.value);
+  formData.append('barcode', processedBarcode);
+  formData.append('category', product.value.category);
+  formData.append('price', product.value.price);
+  formData.append('description', product.value.description);
+
+  // 只有在用户选择了图片时，才添加 imageFile
+  if (selectedFile.value) {
+    formData.append('imageFile', selectedFile.value);
   }
 
   try {
-    await axios.post('/api/products/barcode', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    successMessage.value = '产品更新成功';
-    errorMessage.value = '';
+    const response = await updateProductByBarcode(formData);
+    if (response.code === 200) {
+      product.value = response.data;
+    } else {
+      errorMessage.value = response.message || '更新失败';
+    }
   } catch (error) {
-    errorMessage.value = '产品更新失败';
-    successMessage.value = '';
+    errorMessage.value = '更新产品失败，请稍后再试';
   }
 };
 
-// 处理图片文件更改
-const onImageChange = (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  if (target.files && target.files[0]) {
-    imageFile.value = target.files[0];
+const getImageUrl = (path) => {
+  if (path && !path.startsWith('http')) {
+    return serverBaseUrl + path;
   }
+  return path;
 };
-
-// 页面加载时搜索产品
-onMounted(() => {
-  if (barcode.value) {
-    searchProductByBarcode();
-  }
-});
 </script>
 
-<style scoped>
-.edit-product {
+<style>
+.container {
   max-width: 600px;
-  margin: 0 auto;
-  font-family: Arial, sans-serif;
+  margin: auto;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #f9f9f9;
 }
-
-.search-bar,
-.product-form .form-group {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 16px;
+.search-section {
+  margin-bottom: 20px;
 }
-
-.form-group label {
-  font-weight: bold;
-  margin-bottom: 4px;
+.product-form label {
+  display: block;
+  margin-top: 10px;
 }
-
-.form-group input,
-.form-group textarea,
-button {
+.product-form input, .product-form textarea {
+  width: 100%;
   padding: 8px;
-  font-size: 16px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+.product-image {
+  max-width: 300px;
+  margin-top: 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
 }
-
 button {
-  background-color: #4CAF50;
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin-top: 15px;
+  background: #007bff;
   color: white;
+  border: none;
+  border-radius: 4px;
   cursor: pointer;
 }
-
 button:hover {
-  background-color: #45a049;
+  background: #0056b3;
 }
-
 .error {
   color: red;
-}
-
-.success {
-  color: green;
-}
-
-.product-image {
-  max-width: 300px;
-  max-height: 300px;
-  margin: 16px auto;
-  display: block;
-  border: 2px solid #ddd;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-.image-center {
-  text-align: center;
-}
-
-.image-center input[type="file"] {
-  margin-top: 8px;
-}
-
-.product-image {
-  transition: transform 0.3s ease;
-}
-
-.product-image:hover {
-  transform: scale(1.05);
-}
-
-@media (max-width: 768px) {
-  .product-image {
-    max-width: 100%;
-    height: auto;
-  }
+  margin-top: 10px;
 }
 </style>

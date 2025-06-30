@@ -26,6 +26,7 @@
         try {
           const response = await axios.get('/api/products/missing-barcodes');
           this.products = response.data;
+          console.log("products value :" , this.products);
         } catch (error) {
           console.error('Failed to fetch products:', error);
         }
