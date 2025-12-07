@@ -26,7 +26,7 @@
       <p><strong>价格:</strong> ¥{{ product.price }}</p>
       <p><strong>描述:</strong> {{ product.description }}</p>
       <p><strong>库存:</strong> {{ product.stock }}</p>
-      <p><strong>是否已售:</strong> {{ product.sell ? "是" : "否" }}</p>
+      <p><strong>是否已售:</strong> {{ product.is_sell ? "是" : "否" }}</p>
       <p v-if="product.imageUrl">
         <strong>图片:</strong>
         <img :src="product.imageUrl" alt="产品图片" style="max-width: 300px; margin-top: 10px;" />

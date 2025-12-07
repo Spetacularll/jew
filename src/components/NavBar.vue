@@ -64,7 +64,7 @@ const toggleDropdown = (link: Link) => {
 // 指定 links 的类型为 Link[]
 const links = ref<Link[]>([
   { name: '主页', path: '/' },
-  { name: '登录', path: '/login' },
+  // { name: '登录', path: '/login' },
   { name: '入库', path: '/Inbound' },
   { name: '出库', path: '/outbound' },
   {

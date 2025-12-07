@@ -21,7 +21,9 @@ export default {
       try {
         const response = await axios.get('/api/products/destinations');
         if (response.data.success && Array.isArray(response.data.data)) {
+          console.log('获取的目的地:', response.data.data);
           destinations.value = response.data.data;
+          console.log(destinations.value);
         }
       } catch (err) {
         console.error('获取目的地失败:', err);
@@ -35,7 +37,10 @@ export default {
       try {
         const response = await axios.get('/api/statistics/destinations');
         if (response.data.success && Array.isArray(response.data.data)) {
+          console.log('获取statistics:', response.data.data);
           statistics.value = response.data.data;
+          console.log(statistics.value);
+
         }
       } catch (err) {
         console.error('获取统计信息失败:', err);
@@ -50,7 +55,6 @@ export default {
         const response = await axios.get('/api/products/by-destination', { params: { destination } });
         if (response.data.success && Array.isArray(response.data.data)) {
           products.value = response.data.data;
-          console.log('获取货物成功:', products.value);
         } else {
           throw new Error(response.data.message || '获取货物失败');
         }
@@ -70,17 +74,12 @@ export default {
 
     // 计算属性：将目的地和统计信息合并，并过滤掉数量为 0 的目的地
     const destinationsWithStats = computed(() => {
-      return destinations.value
-        .map(destination => {
-          const stat = statistics.value.find(s => s.destination === destination);
-          return {
-            destination,
-            totalProducts: stat?.totalProducts || 0,
-            totalPrice: stat?.totalPrice || 0
-          };
-        })
-        .filter(item => item.totalProducts > 0); // 过滤掉数量为 0 的目的地
-    });
+      return statistics.value.map(stat => ({
+        destination: stat.destination.trim(),
+        totalProducts: stat.totalProducts,
+        totalPrice: stat.totalPrice
+  })).filter(item => item.totalProducts > 0);
+});
 
 
 

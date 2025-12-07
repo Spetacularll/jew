@@ -3,8 +3,8 @@ import axios from 'axios';
 // 创建一个 Axios 实例
 const instance = axios.create({
   baseURL: import.meta.env.MODE === 'development'
-    ? 'http://localhost:8080/'
-    : 'http://8.138.89.11:8080/', // 生产环境地址
+    ? 'http://localhost:8080'  
+    : '/', // 生产环境地址
   timeout: 30000,
   
 });
